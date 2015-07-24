@@ -240,7 +240,6 @@ SRCS=\
 	src\gc\os.d \
 	src\gc\pooltable.d \
 	src\gc\proxy.d \
-	src\gc\stats.d \
 	\
 	src\rt\aApply.d \
 	src\rt\aApplyR.d \

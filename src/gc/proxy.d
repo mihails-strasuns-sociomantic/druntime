@@ -14,8 +14,9 @@
 module gc.proxy;
 
 import gc.gc;
-import gc.stats;
 import core.stdc.stdlib;
+
+static import core.memory;
 
 private
 {
@@ -53,6 +54,7 @@ private
             size_t  function(void*) gc_sizeOf;
 
             BlkInfo function(void*) gc_query;
+            core.memory.GC.Stats function() gc_stats;
 
             void function(void*) gc_addRoot;
             void function(void*, size_t, const TypeInfo ti) gc_addRange;
@@ -89,6 +91,7 @@ private
         pthis.gc_sizeOf = &gc_sizeOf;
 
         pthis.gc_query = &gc_query;
+        pthis.gc_stats = &gc_stats;
 
         pthis.gc_addRoot = &gc_addRoot;
         pthis.gc_addRange = &gc_addRange;
@@ -256,20 +259,11 @@ extern (C)
         return proxy.gc_query( p );
     }
 
-    // NOTE: This routine is experimental. The stats or function name may change
-    //       before it is made officially available.
-    GCStats gc_stats() nothrow
+    core.memory.GC.Stats gc_stats() nothrow
     {
         if( proxy is null )
-        {
-            GCStats stats = void;
-            _gc.getStats( stats );
-            return stats;
-        }
-        // TODO: Add proxy support for this once the layout of GCStats is
-        //       finalized.
-        //return proxy.gc_stats();
-        return GCStats.init;
+            return _gc.stats();
+        return proxy.gc_stats();
     }
 
     void gc_addRoot( void* p ) nothrow
