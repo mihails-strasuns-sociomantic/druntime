@@ -17,7 +17,7 @@ import core.stdc.string;
 import core.stdc.stdarg;
 import core.bitop;
 import core.memory;
-debug(PRINTF) import core.stdc.stdio;
+debug import core.stdc.stdio;
 static import rt.tlsgc;
 
 alias BlkInfo = GC.BlkInfo;
@@ -230,6 +230,59 @@ size_t structTypeInfoSize(const TypeInfo ti) pure nothrow @nogc
 private class ArrayAllocLengthLock
 {}
 
+// break on this to debug stomping prevention allocations
+export extern(C) void stomping_prevention_trigger ( ) pure nothrow
+{
+    debug(CheckStompingPrevention) stomping_prevention_trigger_nonpure();
+}
+
+extern(C) shared long stomping_prevention_counter;
+
+void stomping_prevention_trigger_nonpure ( ) nothrow
+{
+    import core.atomic;
+    atomicOp!"+="(stomping_prevention_counter, 1);
+
+    import core.stdc.stdlib : getenv;
+    import core.stdc.stdio : fflush, stdout, printf;
+    import core.stdc.string : strcmp;
+
+    static Exception failure;
+    if (failure is null)
+        failure = new Exception("Stomping prevention has been triggered");
+
+    try
+    {
+        char* flag = getenv("ASSERT_ON_STOMPING_PREVENTION".ptr);
+
+        if (flag)
+        {
+            if (strcmp(flag, "1") == 0)
+                throw failure;
+        }
+        else
+        {
+            flag = getenv("ALLOW_STOMPING_PREVENTION".ptr);
+            if (flag && strcmp(flag, "0") == 0)
+                throw failure;
+        }
+    }
+    catch (Exception e)
+    {
+        try
+        {
+            auto msg = e.toString();
+            printf("\n%*s\n", msg.length, msg.ptr);
+        }
+        catch (Exception)
+        {
+            printf("\nStoming prevention has been triggerred\n");
+        }
+
+        fflush(stdout);
+        abort();
+    }
+}
 
 /**
   Set the allocated length of the array block.  This is called
@@ -282,14 +335,21 @@ bool __setArrayAllocLength(ref BlkInfo info, size_t newlength, bool isshared, co
         {
             if(isshared)
             {
-                return cas(cast(shared)length, cast(ubyte)oldlength, cast(ubyte)newlength);
+                bool same_length = cas(cast(shared)length, cast(ubyte)oldlength,
+                    cast(ubyte)newlength);
+                if (!same_length)
+                    stomping_prevention_trigger();
+                return same_length;
             }
             else
             {
                 if(*length == cast(ubyte)oldlength)
                     *length = cast(ubyte)newlength;
                 else
+                {
+                    stomping_prevention_trigger();
                     return false;
+                }
             }
         }
         else
@@ -313,14 +373,21 @@ bool __setArrayAllocLength(ref BlkInfo info, size_t newlength, bool isshared, co
         {
             if(isshared)
             {
-                return cas(cast(shared)length, cast(ushort)oldlength, cast(ushort)newlength);
+                bool same_length = cas(cast(shared)length, cast(ushort)oldlength,
+                    cast(ushort)newlength);
+                if (!same_length)
+                    stomping_prevention_trigger();
+                return same_length;
             }
             else
             {
                 if(*length == oldlength)
                     *length = cast(ushort)newlength;
                 else
+                {
+                    stomping_prevention_trigger();
                     return false;
+                }
             }
         }
         else
@@ -344,14 +411,21 @@ bool __setArrayAllocLength(ref BlkInfo info, size_t newlength, bool isshared, co
         {
             if(isshared)
             {
-                return cas(cast(shared)length, cast(size_t)oldlength, cast(size_t)newlength);
+                bool same_length = cas(cast(shared)length, cast(size_t)oldlength,
+                    cast(size_t)newlength);
+                if (!same_length)
+                    stomping_prevention_trigger();
+                return same_length;
             }
             else
             {
                 if(*length == oldlength)
                     *length = newlength;
                 else
+                {
+                    stomping_prevention_trigger();
                     return false;
+                }
             }
         }
         else
