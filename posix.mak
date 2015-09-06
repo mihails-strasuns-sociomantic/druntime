@@ -3,6 +3,10 @@
 #    pkg_add -r gmake
 # and then run as gmake rather than make.
 
+# Don't assert on stomping prevention during tests or any other internal targets
+# See https://github.com/sociomantic/druntime/pull/14 for details
+export ASSERT_ON_STOMPING_PREVENTION=0
+
 QUIET:=@
 
 include osmodel.mak
@@ -53,10 +57,10 @@ endif
 # Set DFLAGS
 UDFLAGS:=-conf= -Isrc -Iimport -w -dip25 $(MODEL_FLAG) $(OPTIONAL_PIC)
 ifeq ($(BUILD),debug)
-	UDFLAGS += -g -debug
+	UDFLAGS += -g -debug -debug=CheckStompingPrevention
 	DFLAGS:=$(UDFLAGS)
 else
-	UDFLAGS += -O -release
+	UDFLAGS += -O -release -g -debug=CheckStompingPrevention
 	DFLAGS:=$(UDFLAGS) -inline # unittests don't compile with -inline
 endif
 
