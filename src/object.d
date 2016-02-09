@@ -1623,6 +1623,19 @@ class Throwable : Object
     string      msg;    /// A message describing the error.
 
     /**
+     * Get the message describing the error.
+     * Base behavior is to return the `Throwable.msg` field.
+     * Override to return some other error message.
+     *
+     * Returns:
+     *  message
+     */
+    const(char)[] message() const
+    {
+        return msg;
+    }
+
+    /**
      * The _file name and line number of the D source code corresponding with
      * where the error was thrown from.
      */
@@ -1688,6 +1701,8 @@ class Throwable : Object
         sink(typeid(this).name);
         sink("@"); sink(file);
         sink("("); sink(sizeToTempString(line, tmpBuff, 10)); sink(")");
+
+        auto msg = this.message();
 
         if (msg.length)
         {
