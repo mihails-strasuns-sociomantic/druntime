@@ -406,6 +406,9 @@ $(IMPDIR)\core\sys\linux\ifaddrs.d : src\core\sys\linux\ifaddrs.d
 $(IMPDIR)\core\sys\linux\link.d : src\core\sys\linux\link.d
 	copy $** $@
 
+$(IMPDIR)\core\sys\linux\sched.d : src\core\sys\linux\sched.d
+	copy $** $@
+
 $(IMPDIR)\core\sys\linux\termios.d : src\core\sys\linux\termios.d
 	copy $** $@
 
