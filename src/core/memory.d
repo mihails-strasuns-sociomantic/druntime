@@ -680,6 +680,14 @@ struct GC
         return gc_stats();
     }
 
+    deprecated("Use ocean.transition.gc_usage")
+    static void usage ( out size_t used, out size_t free )
+    {
+        auto tmp = GC.stats();
+        used = tmp.usedSize;
+        free = tmp.freeSize;
+    }
+
     /**
      * Adds an internal root pointing to the GC memory block referenced by p.
      * As a result, the block referenced by p itself and any blocks accessible
