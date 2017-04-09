@@ -55,6 +55,7 @@ private
 
             BlkInfo function(void*) gc_query;
             core.memory.GC.Stats function() gc_stats;
+            void function() gc_resetLastAllocation;
 
             void function(void*) gc_addRoot;
             void function(void*, size_t, const TypeInfo ti) gc_addRange;
@@ -92,6 +93,7 @@ private
 
         pthis.gc_query = &gc_query;
         pthis.gc_stats = &gc_stats;
+        pthis.gc_resetLastAllocation = &gc_resetLastAllocation;
 
         pthis.gc_addRoot = &gc_addRoot;
         pthis.gc_addRange = &gc_addRange;
@@ -264,6 +266,13 @@ extern (C)
         if( proxy is null )
             return _gc.stats();
         return proxy.gc_stats();
+    }
+
+    void gc_resetLastAllocation() nothrow
+    {
+        if( proxy is null )
+            return _gc.gc_resetLastAllocation();
+        return proxy.gc_resetLastAllocation();
     }
 
     void gc_addRoot( void* p ) nothrow

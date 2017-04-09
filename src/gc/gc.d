@@ -112,6 +112,7 @@ __gshared Duration recoverTime;
 __gshared Duration maxPauseTime;
 __gshared size_t numCollections;
 __gshared size_t maxPoolMemory;
+__gshared size_t lastAllocSize;
 
 __gshared long numMallocs;
 __gshared long numFrees;
@@ -272,6 +273,14 @@ final class GCMutex : Mutex
 
 struct GC
 {
+
+    void gc_resetLastAllocation() nothrow
+    {
+        gcLock.lock();
+        scope(exit) gcLock.unlock();
+        .lastAllocSize = 0;
+    }
+
     // For passing to debug code (not thread safe)
     __gshared size_t line;
     __gshared char*  file;
@@ -535,6 +544,7 @@ struct GC
             alloc_size = size;
         }
         gcx.log_malloc(p, size);
+        .lastAllocSize += alloc_size;
 
         return p;
     }
@@ -1327,6 +1337,7 @@ struct GC
 
         stats.usedSize -= freeListSize;
         stats.freeSize += freeListSize;
+        stats.lastAllocSize = .lastAllocSize;
     }
 }
 
@@ -3244,6 +3255,7 @@ unittest // bugzilla 14467
     arr = arr[$..$];
     assert(arr.capacity);
 }
+
 
 /* ============================ SENTINEL =============================== */
 

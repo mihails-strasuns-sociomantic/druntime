@@ -166,6 +166,8 @@ struct GC
         size_t usedSize;
         /// number of free bytes on the GC heap (might only get updated after a collection)
         size_t freeSize;
+        ///
+        size_t lastAllocSize;
     }
 
     /**
