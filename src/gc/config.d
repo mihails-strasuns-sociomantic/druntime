@@ -32,7 +32,7 @@ struct Config
 
     void help() @nogc nothrow
     {
-        string s = "GC options are specified as white space separated assignments:
+        string s = "GC options are specified as whitespace separated assignments:
     disable:0|1    - start disabled (%d)
     profile:0|1|2  - enable profiling with summary when terminating program (%d)
     precise:0|1    - enable precise scanning (not implemented yet)
